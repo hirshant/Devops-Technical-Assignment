@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: hirshant/syvora-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+resources: {}
+
+serviceAccount:
+  create: true
+  name: ""
+
+prometheus:
+  # name of the prometheus job label we will set via annotations
+  job: syvora-backend

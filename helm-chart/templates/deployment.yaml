@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "syvora-backend.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "syvora-backend.name" . }}
+    helm.sh/chart: {{ include "syvora-backend.chart" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "syvora-backend.name" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "syvora-backend.name" . }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "{{ .Values.service.port }}"
+    spec:
+      serviceAccountName: {{ include "syvora-backend.fullname" . }}
+      containers:
+        - name: syvora-backend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          resources: {{ toYaml .Values.resources | nindent 12 }}

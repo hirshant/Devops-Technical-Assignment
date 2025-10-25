@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: syvora-alerts
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: syvora.rules
+      rules:
+        - alert: SrvUnresponsive
+          expr: up{job="syvora-backend"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Syvora backend is down"
+
+        - alert: HighResponseTime
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="syvora-backend"}[5m])) by (le)) > 0.5
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High 95th percentile response time (>0.5s)"
